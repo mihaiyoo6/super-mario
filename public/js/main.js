@@ -12,7 +12,7 @@ function drawBackgounds(background, context, sprites){
                 sprites.drawTile(background.tile, context, x, y);
             }
         } 
-    })
+    });
 }
 
 const canvas = document.getElementById('screen');
