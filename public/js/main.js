@@ -28,7 +28,4 @@ loadImage('images/tile-set.png')
         const sprites = new SpriteSheet(image);
         sprites.define('ground', 0, 0);
         sprites.draw('ground', context, 45, 62);
-        context.drawImage(image,
-            0, 0, 16, 16,
-            0, 0, 16, 16);
     });
