@@ -1,67 +1,51 @@
 import {
-    loadLevel
+	loadLevel
 } from './loaders.js';
+
 import {
-    loadBackgroundSprites,
-} from './sprites.js';
-import {
-    createMario
+	createMario
 } from './entities.js';
-import Compositor from './Compositor.js';
 import Timer from './Timer.js';
 import {
-    createBackgroundLayer,
-    createSpriteLayer
+	setupKeyboard
+} from './SetupKeyboard.js';
+import {
+	createCollisionLayer
 } from './layers.js';
-import Keyboard from './KeyboardState.js';
-
 
 
 const canvas = document.getElementById('screen');
 const context = canvas.getContext('2d');
 
 Promise.all([
-        loadBackgroundSprites(),
-        loadLevel('1-1'),
-        createMario()
-    ])
-    .then(([
-        backgroundSprites,
-        level,
-        mario
-    ]) => {
-        const com = new Compositor();
-        const backgroundLayer = createBackgroundLayer(level.backgrounds, backgroundSprites);
-        com.layers.push(backgroundLayer);
+		loadLevel('1-1'),
+		createMario()
+	])
+	.then(([
+		level,
+		mario
+	]) => {
+		mario.pos.set(64, 64);
 
-        const gravity = 2000;
-        mario.pos.set(64, 180);
+		level.entities.add(mario);
+		const input = setupKeyboard(mario);
+		input.listenTo(window);
 
-        const SPACE = 32;
-        const input = new Keyboard();
-        input.addMapping(SPACE, keyState => {
-            if (keyState) {
-                mario.jump.start();
-            } else {
-                mario.jump.cancel();
-            }
-            console.log(keyState);
-        });
+		const timer = new Timer(1 / 60);
+		timer.update = function update(deltaTime) {
+			level.update(deltaTime);
+			level.comp.draw(context);
+		};
+		timer.start();
 
-        input.listenTo(window);
-
-        const spriteLayer = createSpriteLayer(mario);
-        com.layers.push(spriteLayer); 
-
-        const deltaTime = 1 / 60;
-        let accumulatedTime = 0;
-        let lastTime = 0;
-
-        const timer = new Timer(1 / 60);
-        timer.update = function update(time) {
-            mario.update(deltaTime);
-            com.draw(context);
-            mario.vel.y += gravity * deltaTime;
-        };
-        timer.start();
-    });
+		//debug functions
+		level.comp.layers.push(createCollisionLayer(level));
+		['mousedown', 'mousemove'].forEach(eventName => {
+			canvas.addEventListener(eventName, event => {
+				if (event.buttons === 1) {
+					mario.vel.set(0, 0);
+					mario.pos.set(event.offsetX, event.offsetY);
+				}
+			});
+		});
+	});
